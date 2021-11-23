@@ -16,14 +16,6 @@ class LinkedList:
         return self.head
 
     def insert(self, name=None, contact_number=None, address=""):
-        # Handling base cases
-        if name is None and contact_number is None:
-            return "Please provide your name and contact number"
-        elif name is None:
-            return "Please provide your name"
-        elif contact_number is None:
-            return "Please provide your contact number"
-
         # Checking if the list is empty
         if self.head == None:
             self.head = Node(name, contact_number, address)

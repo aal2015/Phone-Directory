@@ -1,4 +1,4 @@
-contact_list = [
+init_contact_list = [
     {
         "name": "Anuj Gupta",
         "address": "Khlong Toey, Sukhumvit, Bangkok",

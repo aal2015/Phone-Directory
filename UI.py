@@ -3,15 +3,16 @@ from tkinter import ttk
 import pickle
 from functools import partial
 from linked_list import LinkedList
-from data import contact_list
 
-# Beige
 BACKGROUND_COLOR = "#F5F5F5"
-
+CONTACT_BUTTON_COLOR ="#E8E8E8"
+ADD_CONTACT_BUTTON_COLOR = "#72A0C1"
+DELETE_BUTTON_COLOR = "#005A9C"
+EDIT_BUTTON_COLOR = "#B9D9EB"
+Gray_COLOR = "gray"
 
 class PhoneDirectoryInterface():
     def __init__(self, *args, **kwargs):
-
         self.window = Tk()
         # self.window.minsize(width=300, height=500)
 
@@ -47,19 +48,19 @@ class PhoneDirectoryInterface():
         second_frame = Frame(my_canvas)
 
         # Add that New frame To a Window In The Canvas
-        my_canvas.create_window((0,0), window=second_frame, anchor="nw")
+        my_canvas.create_window((0, 0), window=second_frame, anchor="nw")
 
         return second_frame
 
-    def pack_forget_function(self):
+    def destroy_widgets(self):
         for item in self.addedToPage:
-            item.pack_forget()
+            item.destroy()
         self.addedToPage = []
 
     # ---------------------------- Contact List Page ------------------------------- #
 
     def contact_list_page(self):
-        self.pack_forget_function()
+        self.destroy_widgets()
         self.contact_detail_list = []
 
         application_title = Label(text="Contacts", font=("Arial", 28, "bold"), bg=BACKGROUND_COLOR)
@@ -68,6 +69,9 @@ class PhoneDirectoryInterface():
 
         second_frame = self.addScroll()
 
+        with open("contact_data.txt", mode="rb") as file:
+            contact_list = pickle.load(file)
+
         if self.linkedList.return_head() is None:
             for contact in contact_list:
                 self.linkedList.insert(name=contact["name"], address=contact["address"], contact_number=contact["contact_number"])
@@ -75,27 +79,39 @@ class PhoneDirectoryInterface():
         i = 0
         temp = self.linkedList.return_head()
         while temp is not None:
-            name_Button = Button(second_frame, text=temp.name, font=("Arial", 12, "bold"), command=partial(self.contact_detail_page, i), relief=FLAT, anchor="e", bg=BACKGROUND_COLOR)
-            name_Button.pack(anchor='w')
-            self.addedToPage.append(name_Button)
+            name_Button = Button(second_frame, text=temp.name, font=("Arial", 12, "bold"), command=partial(self.contact_detail_page, i), width=40, relief=FLAT, anchor="w", bg=CONTACT_BUTTON_COLOR)
+            name_Button.pack()
+            line_separator = ttk.Separator(second_frame, orient='horizontal')
+            line_separator.pack(fill='x')
+            self.addedToPage.extend([name_Button,line_separator])
 
             self.contact_detail_list.append({"name": temp.name, "address": temp.address, "contact_number": temp.contact_number})
             temp = temp.next
             i += 1
 
-        addContact = Button(text="Add Contact", font=("Arial", 10, "bold"), command=self.add_contact_page, relief=FLAT, bg=BACKGROUND_COLOR)
-        addContact.pack(padx=10, pady=10)
-        self.addedToPage.append(addContact)
+        addContact = Button(text="Add Contact", font=("Arial", 12, "bold"), width=12, command=self.add_contact_page, relief=FLAT, fg="white", bg=ADD_CONTACT_BUTTON_COLOR)
+        addContact.pack(padx=10, pady=(0, 10), side=BOTTOM)
+        save_Button = Button(text='Save Changes', font=("Arial", 12, "bold"), width=12, command=self.save_changes, relief=FLAT, anchor="w", fg="white", bg=EDIT_BUTTON_COLOR)
+        save_Button.pack(side=BOTTOM, pady=(10, 0))
+        self.addedToPage.extend([addContact, save_Button])
 
     def save_changes(self):
-        pass
+        temp = self.linkedList.return_head()
+        save_contact_list = []
+
+        while temp is not None:
+            object = {"name": temp.name, "address": temp.address, "contact_number": temp.contact_number}
+            save_contact_list.append(object)
+            temp = temp.next
+        with open("contact_data.txt", mode="wb") as file:
+            pickle.dump(save_contact_list, file)
 
     # -------------------------- Display Contact Detail----------------------------- #
 
     def contact_detail_page(self, index):
-        self.pack_forget_function()
+        self.destroy_widgets()
 
-        title = Label(text="Contact Information", font=("Arial", 28, "bold"), bg=BACKGROUND_COLOR)
+        title = Label(text="Contact Details", font=("Arial", 28, "bold"), bg=BACKGROUND_COLOR)
         title.pack(side=TOP)
         self.addedToPage.append(title)
 
@@ -107,7 +123,9 @@ class PhoneDirectoryInterface():
         name_label.pack(anchor='w', side=LEFT)
         name_output = Label(name_frame, text=name, font=("Arial", 12), anchor="e", bg=BACKGROUND_COLOR)
         name_output.pack(anchor='w', side=LEFT)
-        self.addedToPage.extend([name_frame, name_label, name_output])
+        line_separator = ttk.Separator(self.window, orient='horizontal')
+        line_separator.pack(fill='x')
+        self.addedToPage.extend([name_frame, name_label, name_output, line_separator])
 
         address_frame = Frame(self.window)
         address_frame.pack(anchor="w")
@@ -115,7 +133,9 @@ class PhoneDirectoryInterface():
         address_label.pack(anchor='w', side=LEFT)
         address_output = Label(address_frame, text=address, font=("Arial", 12), anchor="e", bg=BACKGROUND_COLOR)
         address_output.pack(anchor='w', side=LEFT)
-        self.addedToPage.extend([address_frame, address_label, address_output])
+        line_separator2 = ttk.Separator(self.window, orient='horizontal')
+        line_separator2.pack(fill='x')
+        self.addedToPage.extend([address_frame, address_label, address_output, line_separator2])
 
         contact_number_frame = Frame(self.window)
         contact_number_frame.pack(anchor="w")
@@ -125,12 +145,14 @@ class PhoneDirectoryInterface():
         contact_number_output.pack(anchor='w', side=LEFT)
         self.addedToPage.extend([contact_number_frame, contact_number_label, contact_number_output])
 
-        edit_button = Button(text="Edit", font=("Arial", 12, "bold"), command=lambda: self.edit_contact_page(name,address,contact_number), relief=FLAT, bg=BACKGROUND_COLOR)
-        edit_button.pack()
-        delete_button = Button(text="Delete", font=("Arial", 12, "bold"), command=lambda: self.delete_contact(name,address,contact_number), relief=FLAT, bg=BACKGROUND_COLOR)
-        delete_button.pack()
-        back_button = Button(text="Back", font=("Arial", 12, "bold"), command=self.contact_list_page, relief=FLAT, bg=BACKGROUND_COLOR)
-        back_button.pack()
+        back_button = Button(text="Back", font=("Arial", 12, "bold"), command=self.contact_list_page, relief=FLAT, width=6, fg="white", bg=ADD_CONTACT_BUTTON_COLOR)
+        back_button.pack(side=BOTTOM)
+        delete_button = Button(text="Delete", font=("Arial", 12, "bold"), command=lambda: self.delete_contact(name, address, contact_number), width=6, fg="white", relief=FLAT, bg=DELETE_BUTTON_COLOR)
+        delete_button.pack(side=BOTTOM)
+        edit_button = Button(text="Edit", font=("Arial", 12, "bold"), command=lambda: self.edit_contact_page(name,address,contact_number), width=6, fg="white", relief=FLAT, bg=EDIT_BUTTON_COLOR)
+        edit_button.pack(side=BOTTOM, pady=(100, 0))
+
+
         self.addedToPage.extend([edit_button, delete_button, back_button])
 
 
@@ -141,7 +163,7 @@ class PhoneDirectoryInterface():
     # ----------------------------- Edit Contact Page ------------------------------ #
 
     def edit_contact_page(self, name, address, contact_number):
-        self.pack_forget_function()
+        self.destroy_widgets()
         entry_length = 80
         previous_record = [name, address, contact_number]
 
@@ -190,7 +212,7 @@ class PhoneDirectoryInterface():
 
     # ----------------------------- Add Contact Page ------------------------------- #
     def add_contact_page(self):
-        self.pack_forget_function()
+        self.destroy_widgets()
         entry_length = 80
 
         title = Label(text="Add Contact", font=("Arial", 28, "bold"), bg=BACKGROUND_COLOR)
@@ -221,12 +243,18 @@ class PhoneDirectoryInterface():
         contact_number_input.pack(side=LEFT)
         self.addedToPage.extend([contact_number_frame, contact_number_label, contact_number_input])
 
-        add_button = Button(text="Add", font=("Arial", 12, "bold"), command=lambda: self.add_contact(name_input.get(),address_input.get(),contact_number_input.get()), relief=FLAT, bg=BACKGROUND_COLOR)
-        add_button.pack()
-        back_button = Button(text="Back", font=("Arial", 12, "bold"), command=self.contact_list_page, relief=FLAT, bg=BACKGROUND_COLOR)
-        back_button.pack()
+        notice_frame = Frame(self.window)
+        notice_frame.pack(anchor="w")
+        contact_number_label = Label(notice_frame, text="Enter at least name and contact number for the new contact to be added.", font=("Arial", 12), anchor="e", bg=BACKGROUND_COLOR)
+        contact_number_label.pack(anchor='w', side=LEFT)
+
+        add_button = Button(text="Add", font=("Arial", 12, "bold"), command=lambda: self.add_contact(name_input.get(),address_input.get(),contact_number_input.get()), width=6, fg="white", relief=FLAT, bg=ADD_CONTACT_BUTTON_COLOR)
+        back_button = Button(text="Back", font=("Arial", 12, "bold"), width=6, command=self.contact_list_page, relief=FLAT, fg="white", bg=Gray_COLOR)
+        back_button.pack(side=BOTTOM)
+        add_button.pack(side=BOTTOM)
         self.addedToPage.extend([add_button,back_button])
 
     def add_contact(self, name, address, contact_number):
-        self.linkedList.insert(name=name, address=address, contact_number=contact_number)
+        if len(name) > 0 and len(contact_number) > 0:
+            self.linkedList.insert(name=name, address=address, contact_number=contact_number)
         self.contact_list_page()
