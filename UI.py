@@ -11,6 +11,7 @@ ADD_CONTACT_BUTTON_COLOR = "#72A0C1"
 DELETE_BUTTON_COLOR = "#005A9C"
 EDIT_BUTTON_COLOR = "#B9D9EB"
 Gray_COLOR = "gray"
+SEARCH_COLOR_BUTTON = "#585858"
 
 class PhoneDirectoryInterface():
     def __init__(self, *args, **kwargs):
@@ -43,7 +44,7 @@ class PhoneDirectoryInterface():
 
         # Configure The Canvas
         my_canvas.configure(yscrollcomman=my_scrollbar.set)
-        my_canvas.bind('<Configure>', lambda e: my_canvas.configure(scrollregion = my_canvas.bbox("all")))
+        my_canvas.bind('<Configure>', lambda e: my_canvas.configure(scrollregion=my_canvas.bbox("all")))
 
         # Create ANOTHER Frame INSIDE the Canvas
         second_frame = Frame(my_canvas)
@@ -66,6 +67,16 @@ class PhoneDirectoryInterface():
         application_title = Label(text="Contacts", font=("Arial", 28, "bold"), bg=BACKGROUND_COLOR)
         application_title.pack(side=TOP)
         self.addedToPage.append(application_title)
+
+        search_input_frame = Frame(self.window)
+        search_input_frame.pack(anchor="w")
+        search_label = Label(search_input_frame, text="Search Name: ", font=("Arial", 12, "bold"), bg=BACKGROUND_COLOR)
+        search_label.pack(side=LEFT)
+        search_input = Entry(search_input_frame, width=40)
+        search_input.pack(side=LEFT)
+        search_button = Button(search_input_frame, text="Search", font=("Arial", 12, "bold"), command=lambda: self.search_page(search_input.get()), relief=FLAT, fg="white", bg=SEARCH_COLOR_BUTTON)
+        search_button.pack(side=LEFT)
+        self.addedToPage.extend([search_input_frame, search_input, search_button])
 
         second_frame = self.addScroll()
 
@@ -164,8 +175,6 @@ class PhoneDirectoryInterface():
         delete_button.pack(side=BOTTOM)
         edit_button = Button(text="Edit", font=("Arial", 12, "bold"), command=lambda: self.edit_contact_page(name, address, contact_number, email), width=6, fg="white", relief=FLAT, bg=EDIT_BUTTON_COLOR)
         edit_button.pack(side=BOTTOM, pady=(100, 0))
-
-
         self.addedToPage.extend([edit_button, delete_button, back_button])
 
 
@@ -278,7 +287,7 @@ class PhoneDirectoryInterface():
         notice_frame.pack(anchor="w")
         notice_label = Label(notice_frame, text="Enter at least name and contact number for the new contact to be added.", font=("Arial", 12), anchor="e", bg=BACKGROUND_COLOR)
         notice_label.pack(anchor='w', side=LEFT)
-        self.addedToPage.append(notice_label)
+        self.addedToPage.extend([notice_label, notice_frame])
 
         add_button = Button(text="Add", font=("Arial", 12, "bold"), command=lambda: self.add_contact(name_input.get(),address_input.get(),contact_number_input.get(),email_input.get()), width=6, fg="white", relief=FLAT, bg=ADD_CONTACT_BUTTON_COLOR)
         back_button = Button(text="Back", font=("Arial", 12, "bold"), width=6, command=lambda: self.contact_list_page(False), fg="white", relief=FLAT, bg=Gray_COLOR)
@@ -290,3 +299,36 @@ class PhoneDirectoryInterface():
         if len(name) > 0 and len(contact_number) > 0:
             self.linkedList.insert(name=name, address=address, contact_number=contact_number, email=email)
         self.contact_list_page(False)
+
+    # -------------------------------- Search Page --------------------------------- #
+
+    def search_page(self, name):
+        self.destroy_widgets()
+
+        title = Label(text="Search Found", font=("Arial", 28, "bold"), bg=BACKGROUND_COLOR)
+        title.pack(side=TOP)
+        self.addedToPage.append(title)
+
+        prefix_match_found = []
+        name = name.lower()
+        len_name = len(name)
+
+        for item in self.contact_detail_list:
+            if len_name <= len(item["name"]):
+                if name == item["name"][:len_name].lower():
+                    prefix_match_found.append(item)
+
+        i = 0
+        second_frame = self.addScroll()
+        for item in prefix_match_found:
+            name_Button = Button(second_frame, text=item["name"], font=("Arial", 12, "bold"), command=partial(self.contact_detail_page, i), width=40, relief=FLAT, anchor="w", bg=CONTACT_BUTTON_COLOR)
+            name_Button.pack()
+            line_separator = ttk.Separator(second_frame, orient='horizontal')
+            line_separator.pack(fill='x')
+            self.addedToPage.extend([name_Button,line_separator])
+
+            i += 1
+
+        back_button = Button(text="Back", font=("Arial", 12, "bold"), width=6, command=lambda: self.contact_list_page(False), fg="white", relief=FLAT, bg=Gray_COLOR)
+        back_button.pack(side=BOTTOM)
+        self.addedToPage.append(back_button)
