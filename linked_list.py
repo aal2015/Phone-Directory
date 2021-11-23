@@ -57,5 +57,5 @@ class LinkedList:
                 break
             prev = current
             current = current.next
-    
+
         return prev, current

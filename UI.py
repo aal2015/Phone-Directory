@@ -12,10 +12,6 @@ BACKGROUND_COLOR = "#F5F5F5"
 class PhoneDirectoryInterface():
     def __init__(self, *args, **kwargs):
 
-        infile = open('data.py', 'r')
-        new_dict = pickle.load(infile)
-        infile.close()
-
         self.window = Tk()
         # self.window.minsize(width=300, height=500)
 
